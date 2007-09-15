@@ -48,7 +48,7 @@
 
 Name:           icu4j
 Version:        3.6.1
-Release:        %mkrel 1.2.1
+Release:        %mkrel 1.2.2
 Epoch:          0
 Summary:        International Components for Unicode for Java
 License:        MIT style 
@@ -70,8 +70,6 @@ BuildArch:      noarch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 %if %{gcj_support}
 BuildRequires:          java-gcj-compat-devel
-Requires(post):         java-gcj-compat
-Requires(postun):       java-gcj-compat
 %endif
 
 %description
