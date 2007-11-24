@@ -63,12 +63,14 @@ Patch2:         %{name}-updatetimestamp.patch
 BuildRequires:  ant
 BuildRequires:  java-javadoc
 BuildRequires:  jpackage-utils >= 0:1.5
+BuildRequires:  zip
 Requires:       jpackage-utils
 %if %{with_eclipse}
 BuildRequires:  eclipse-pde >= 0:3.2.1
 %endif
 %if ! %{gcj_support}
 BuildArch:      noarch
+BuildRequires:  java-devel
 %endif
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 %if %{gcj_support}
