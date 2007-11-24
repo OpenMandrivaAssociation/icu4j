@@ -48,7 +48,7 @@
 
 Name:           icu4j
 Version:        3.6.1
-Release:        %mkrel 1.2.2
+Release:        %mkrel 1.6.1
 Epoch:          0
 Summary:        International Components for Unicode for Java
 License:        MIT style 
@@ -57,6 +57,9 @@ Group:          Development/Java
 Source0:        http://download.icu-project.org/files/icu4j/3.6.1/icu4jsrc_3_6_1.jar
 Patch0:         %{name}-crosslink.patch
 Patch1:         %{name}-disable-javadocs.patch
+# Take from tag release-3-6-1-eclipse331-20070906
+# Patch made using Eclipse won't apply due to Windows line ending issue.
+Patch2:         %{name}-updatetimestamp.patch
 BuildRequires:  ant
 BuildRequires:  java-javadoc
 BuildRequires:  jpackage-utils >= 0:1.5
@@ -110,6 +113,7 @@ Eclipse plugin support for %{name}.
 %setup -q -c
 %patch0 -p0
 %patch1 -p0
+%patch2 -p1
 
 %{__sed} -i 's/\r//' license.html
 %{__sed} -i 's/\r//' APIChangeReport.html
@@ -200,7 +204,7 @@ popd
 %doc license.html readme.html APIChangeReport.html
 %{_javadir}/%{name}*.jar
 %if %{gcj_support}
-%dir %attr(-,root,root) %{_libdir}/gcj/%{name}/
+%dir %attr(-,root,root) %{_libdir}/gcj/%{name}
 %attr(-,root,root) %{_libdir}/gcj/%{name}/icu4j-%{version}.jar.*
 %endif
 
