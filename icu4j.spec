@@ -48,7 +48,7 @@
 
 Name:           icu4j
 Version:        3.6.1
-Release:        %mkrel 1.6.1
+Release:        %mkrel 1.6.2
 Epoch:          0
 Summary:        International Components for Unicode for Java
 License:        MIT style 
@@ -62,7 +62,7 @@ Patch1:         %{name}-disable-javadocs.patch
 Patch2:         %{name}-updatetimestamp.patch
 BuildRequires:  ant
 BuildRequires:  java-javadoc
-BuildRequires:  jpackage-utils >= 0:1.5
+BuildRequires:  java-rpmbuild >= 0:1.5
 BuildRequires:  zip
 Requires:       jpackage-utils
 %if %{with_eclipse}
