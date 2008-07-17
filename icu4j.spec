@@ -36,30 +36,31 @@
 %define with_eclipse %{?_with_eclipse:1}%{!?_with_eclipse:0}
 %define without_eclipse %{!?_with_eclipse:1}%{?_with_eclipse:0}
 
-%define _with_gcj_support 1
-
-%define gcj_support %{?_with_gcj_support:1}%{!?_with_gcj_support:%{?_without_gcj_support:0}%{!?_without_gcj_support:%{?_gcj_support:%{_gcj_support}}%{!?_gcj_support:0}}}
-
 %define section free
 
 %define eclipse_name            eclipse
 %define eclipse_base            %{_datadir}/%{eclipse_name}
-%define eclipse_lib_base        %{_libdir}/%{eclipse_name}
 
 Name:           icu4j
-Version:        3.6.1
-Release:        %mkrel 1.6.2
+Version:        3.8.1
+Release:        %mkrel 0.2.1
 Epoch:          0
 Summary:        International Components for Unicode for Java
-License:        MIT style 
+License:        MIT and EPL 
 URL:            http://www-306.ibm.com/software/globalization/icu/index.jsp
 Group:          Development/Java
-Source0:        http://download.icu-project.org/files/icu4j/3.6.1/icu4jsrc_3_6_1.jar
+Source0:        http://download.icu-project.org/files/icu4j/3.8.1/icu4j-3_8_1-src.jar
 Patch0:         %{name}-crosslink.patch
-Patch1:         %{name}-disable-javadocs.patch
-# Take from tag release-3-6-1-eclipse331-20070906
-# Patch made using Eclipse won't apply due to Windows line ending issue.
+# Set the OSGi shared configuration dir for our split (libdir and
+# datadir) Eclipse packages.  Will go away once 3.4 is in.
+Patch1:         %{name}-osgiconfigdir.patch
+# Update the MANIFEST.MF to have the same qualifier in the bundle as is
+# in Eclipse's Orbit project
 Patch2:         %{name}-updatetimestamp.patch
+# Bundle the source instead of having it be an exploded directory.  This
+# doesn't work with a 3.3 Eclipse SDK but will with a 3.4 so we'll have
+# to rebuild once we get 3.4 in.
+Patch3:         %{name}-individualsourcebundle.patch
 BuildRequires:  ant
 BuildRequires:  java-javadoc
 BuildRequires:  java-rpmbuild >= 0:1.5
@@ -68,14 +69,7 @@ Requires:       jpackage-utils
 %if %{with_eclipse}
 BuildRequires:  eclipse-pde >= 0:3.2.1
 %endif
-%if ! %{gcj_support}
-BuildArch:      noarch
-BuildRequires:  java-devel
-%endif
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
-%if %{gcj_support}
-BuildRequires:          java-gcj-compat-devel
-%endif
 
 %description
 The International Components for Unicode (ICU) library provides robust and
@@ -115,7 +109,8 @@ Eclipse plugin support for %{name}.
 %setup -q -c
 %patch0 -p0
 %patch1 -p0
-%patch2 -p1
+%patch2 -p0
+%patch3 -p0
 
 %{__sed} -i 's/\r//' license.html
 %{__sed} -i 's/\r//' APIChangeReport.html
@@ -123,41 +118,16 @@ Eclipse plugin support for %{name}.
 
 sed --in-place "s/ .*bootclasspath=.*//g" build.xml
 sed --in-place "s/<date datetime=.*when=\"after\"\/>//" build.xml
+sed --in-place "/javac1.3/d" build.xml
+sed --in-place "s:/usr/lib:%{_libdir}:g" build.xml
 
 %build
 %if %{without_eclipse}
 %ant -Dicu4j.javac.source=1.5 -Dicu4j.javac.target=1.5 -Dj2se.apidoc=%{_javadocdir}/java jar docs
 %else
-%ant -Dicu4j.javac.source=1.5 -Dicu4j.javac.target=1.5 -Dj2se.apidoc=%{_javadocdir}/java jar docs eclipseProjects
-%endif
-
-%if %{with_eclipse}
-# eclipse build
-export JAVA_HOME=%{java_home}
-export PATH=%{java_bin}:/usr/bin:$PATH
-    
-# See comments in the script to understand this.
-/bin/sh -x %{eclipse_base}/buildscripts/copy-platform SDK %{eclipse_base}
-SDK=$(cd SDK >/dev/null && pwd)
-    
-# Eclipse may try to write to the home directory.
-%__mkdir_p home
-
-homedir=$(cd home > /dev/null && pwd)
-
-pushd eclipseProjects
-%{java} -cp $SDK/startup.jar \
-     -Dosgi.sharedConfiguration.area=%{_libdir}/eclipse/configuration \
-     -Duser.home=$homedir                        \
-     org.eclipse.core.launcher.Main             \
-     -application org.eclipse.ant.core.antRunner       \
-     -Dtype=feature                                    \
-     -Did=com.ibm.icu                                  \
-     -DsourceDirectory=$(pwd)                          \
-     -DbaseLocation=$SDK                               \
-     -Dbuilder=%{eclipse_base}/plugins/org.eclipse.pde.build/templates/package-build  \
-     -f %{eclipse_base}/plugins/org.eclipse.pde.build/scripts/build.xml
-
+%ant -Dj2se.apidoc=%{_javadocdir}/java -Declipse.home=%{eclipse_base} \
+  -Declipse.basews=gtk -Declipse.baseos=linux \
+  -Declipse.basearch=%{eclipse_arch} jar docs eclipsePDEBuild
 %endif
 
 %install
@@ -175,40 +145,18 @@ pushd eclipseProjects
 
 %if %{with_eclipse}
 # eclipse
-install -d -m755 %{buildroot}/%{eclipse_lib_base}
+install -d -m755 %{buildroot}/%{eclipse_base}
 
-pushd eclipseProjects
-# FIXME: icu4j generates res_index.txt differently on different arches - possible libgcj bug.
-unzip -qq -d %{buildroot}/%{_datadir}/ build/rpmBuild/com.ibm.icu.zip
-popd
-
-%endif
-
-%if %{gcj_support}
-%{_bindir}/aot-compile-rpm
+unzip -qq -d %{buildroot}/%{eclipse_base} eclipseProjects/ICU4J.com.ibm.icu/com.ibm.icu-com.ibm.icu.zip
 %endif
 
 %clean
 %__rm -rf %{buildroot}
 
-%if %{gcj_support}
-%post
-%{update_gcjdb}
-%endif
-
-%if %{gcj_support}
-%postun
-%{clean_gcjdb}
-%endif
-
 %files
 %defattr(0644,root,root,0755)
 %doc license.html readme.html APIChangeReport.html
 %{_javadir}/%{name}*.jar
-%if %{gcj_support}
-%dir %attr(-,root,root) %{_libdir}/gcj/%{name}
-%attr(-,root,root) %{_libdir}/gcj/%{name}/icu4j-%{version}.jar.*
-%endif
 
 %files javadoc
 %defattr(0644,root,root,0755)
@@ -223,7 +171,4 @@ popd
 %{_datadir}/eclipse/features/*
 %{_datadir}/eclipse/plugins/*
 %doc license.html readme.html
-%if %{gcj_support}
-%{_libdir}/gcj/%{name}/com.ibm.icu*
-%endif
 %endif
