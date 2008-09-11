@@ -38,12 +38,19 @@
 
 %define section free
 
-%define eclipse_name            eclipse
-%define eclipse_base            %{_datadir}/%{eclipse_name}
+%define eclipse_base            %{_libdir}/eclipse
+# Note:  this next section looks weird having an arch specified in a
+# noarch specfile but the parts of the build
+# All arches line up between Eclipse and Linux kernel names except i386 -> x86
+%ifarch %{ix86}
+%define eclipse_arch    x86
+%else
+%define eclipse_arch   %{_arch}
+%endif
 
 Name:           icu4j
 Version:        3.8.1
-Release:        %mkrel 0.2.1
+Release:        %mkrel 0.3.1
 Epoch:          0
 Summary:        International Components for Unicode for Java
 License:        MIT and EPL 
@@ -51,9 +58,6 @@ URL:            http://www-306.ibm.com/software/globalization/icu/index.jsp
 Group:          Development/Java
 Source0:        http://download.icu-project.org/files/icu4j/3.8.1/icu4j-3_8_1-src.jar
 Patch0:         %{name}-crosslink.patch
-# Set the OSGi shared configuration dir for our split (libdir and
-# datadir) Eclipse packages.  Will go away once 3.4 is in.
-Patch1:         %{name}-osgiconfigdir.patch
 # Update the MANIFEST.MF to have the same qualifier in the bundle as is
 # in Eclipse's Orbit project
 Patch2:         %{name}-updatetimestamp.patch
@@ -61,6 +65,8 @@ Patch2:         %{name}-updatetimestamp.patch
 # doesn't work with a 3.3 Eclipse SDK but will with a 3.4 so we'll have
 # to rebuild once we get 3.4 in.
 Patch3:         %{name}-individualsourcebundle.patch
+# PDE Build is in a location the upstream build.xml doesn't check
+Patch4:         %{name}-pdebuildlocation.patch
 BuildRequires:  ant
 BuildRequires:  java-javadoc
 BuildRequires:  java-rpmbuild >= 0:1.5
@@ -108,9 +114,9 @@ Eclipse plugin support for %{name}.
 %prep
 %setup -q -c
 %patch0 -p0
-%patch1 -p0
 %patch2 -p0
 %patch3 -p0
+%patch4 -p0
 
 %{__sed} -i 's/\r//' license.html
 %{__sed} -i 's/\r//' APIChangeReport.html
@@ -165,10 +171,10 @@ unzip -qq -d %{buildroot}/%{eclipse_base} eclipseProjects/ICU4J.com.ibm.icu/com.
 %if %{with_eclipse}
 %files eclipse
 %defattr(0644,root,root,0755)
-%dir %{_datadir}/eclipse
-%dir %{_datadir}/eclipse/features
-%dir %{_datadir}/eclipse/plugins
-%{_datadir}/eclipse/features/*
-%{_datadir}/eclipse/plugins/*
+%dir %{_libdir}/eclipse
+%dir %{_libdir}/eclipse/features
+%dir %{_libdir}/eclipse/plugins
+%{_libdir}/eclipse/features/*
+%{_libdir}/eclipse/plugins/*
 %doc license.html readme.html
 %endif
