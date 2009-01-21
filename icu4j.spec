@@ -48,34 +48,31 @@
 %define eclipse_arch   %{_arch}
 %endif
 
-Name:           icu4j
-Version:        3.8.1
-Release:        %mkrel 0.3.1
-Epoch:          0
-Summary:        International Components for Unicode for Java
-License:        MIT and EPL 
-URL:            http://www-306.ibm.com/software/globalization/icu/index.jsp
-Group:          Development/Java
-Source0:        http://download.icu-project.org/files/icu4j/3.8.1/icu4j-3_8_1-src.jar
-Patch0:         %{name}-crosslink.patch
-# Update the MANIFEST.MF to have the same qualifier in the bundle as is
-# in Eclipse's Orbit project
-Patch2:         %{name}-updatetimestamp.patch
-# Bundle the source instead of having it be an exploded directory.  This
-# doesn't work with a 3.3 Eclipse SDK but will with a 3.4 so we'll have
-# to rebuild once we get 3.4 in.
-Patch3:         %{name}-individualsourcebundle.patch
+%define realversion 4.0.1
+%define tarballver %(echo %realversion|sed -e 's|\\.|_|g')
+
+
+Summary:	International Components for Unicode for Java
+Name:		icu4j
+Version:	%{realversion}
+Release:	%mkrel 0.0.1
+Epoch:		0
+License:	MIT and EPL 
+Group:		Development/Java
+URL:		http://icu-project.org/
+Source0:	http://download.icu-project.org/files/icu4j/4.0.1/%{name}-%{tarballver}-src.jar
+Patch0:		%{name}-crosslink.patch
 # PDE Build is in a location the upstream build.xml doesn't check
-Patch4:         %{name}-pdebuildlocation.patch
-BuildRequires:  ant
-BuildRequires:  java-javadoc
-BuildRequires:  java-rpmbuild >= 0:1.5
-BuildRequires:  zip
-Requires:       jpackage-utils
+Patch4:		%{name}-pdebuildlocation.patch
+BuildRequires:	ant
+BuildRequires:	java-javadoc
+BuildRequires:	java-rpmbuild >= 0:1.5
+BuildRequires:	zip
+Requires:	jpackage-utils
 %if %{with_eclipse}
-BuildRequires:  eclipse-pde >= 0:3.2.1
+BuildRequires:	eclipse-pde >= 0:3.2.1
 %endif
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
 The International Components for Unicode (ICU) library provides robust and
@@ -93,18 +90,18 @@ richer APIs, while remaining as compatible as possible with the original
 Java text and internationalization API design.
 
 %package javadoc
-Summary:        Javadoc for %{name}
-Group:          Development/Java
-Requires:       jpackage-utils
+Summary:	Javadoc for %{name}
+Group:		Development/Java
+Requires:	jpackage-utils
 
 %description javadoc
 Javadoc for %{name}.
 
 %if %{with_eclipse}
 %package eclipse
-Summary:        Eclipse plugin for %{name}
-Group:          Development/Java
-Requires:       jpackage-utils
+Summary:	Eclipse plugin for %{name}
+Group:		Development/Java
+Requires:	jpackage-utils
 
 %description eclipse
 Eclipse plugin support for %{name}.
@@ -114,8 +111,6 @@ Eclipse plugin support for %{name}.
 %prep
 %setup -q -c
 %patch0 -p0
-%patch2 -p0
-%patch3 -p0
 %patch4 -p0
 
 %{__sed} -i 's/\r//' license.html
