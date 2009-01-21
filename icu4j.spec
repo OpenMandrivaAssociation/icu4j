@@ -38,41 +38,38 @@
 
 %define section free
 
-%define eclipse_base            %{_libdir}/eclipse
-# Note:  this next section looks weird having an arch specified in a
-# noarch specfile but the parts of the build
-# All arches line up between Eclipse and Linux kernel names except i386 -> x86
-%ifarch %{ix86}
-%define eclipse_arch    x86
-%else
-%define eclipse_arch   %{_arch}
-%endif
+%define eclipse_name            eclipse
+%define eclipse_base            %{_datadir}/%{eclipse_name}
 
-%define realversion 4.0.1
-%define tarballver %(echo %realversion|sed -e 's|\\.|_|g')
-
-
-Summary:	International Components for Unicode for Java
-Name:		icu4j
-Version:	%{realversion}
-Release:	%mkrel 0.0.1
-Epoch:		0
-License:	MIT and EPL 
-Group:		Development/Java
-URL:		http://icu-project.org/
-Source0:	http://download.icu-project.org/files/icu4j/4.0.1/%{name}-%{tarballver}-src.jar
-Patch0:		%{name}-crosslink.patch
-# PDE Build is in a location the upstream build.xml doesn't check
-Patch4:		%{name}-pdebuildlocation.patch
-BuildRequires:	ant
-BuildRequires:	java-javadoc
-BuildRequires:	java-rpmbuild >= 0:1.5
-BuildRequires:	zip
-Requires:	jpackage-utils
+Name:           icu4j
+Version:        3.8.1
+Release:        %mkrel 0.2.1
+Epoch:          1
+Summary:        International Components for Unicode for Java
+License:        MIT and EPL
+URL:            http://www-306.ibm.com/software/globalization/icu/index.jsp
+Group:          Development/Java
+Source0:        http://download.icu-project.org/files/icu4j/3.8.1/icu4j-3_8_1-src.jar
+Patch0:         %{name}-crosslink.patch
+# Set the OSGi shared configuration dir for our split (libdir and
+# datadir) Eclipse packages.  Will go away once 3.4 is in.
+Patch1:         %{name}-osgiconfigdir.patch
+# Update the MANIFEST.MF to have the same qualifier in the bundle as is
+# in Eclipse's Orbit project
+Patch2:         %{name}-updatetimestamp.patch
+# Bundle the source instead of having it be an exploded directory.  This
+# doesn't work with a 3.3 Eclipse SDK but will with a 3.4 so we'll have
+# to rebuild once we get 3.4 in.
+Patch3:         %{name}-individualsourcebundle.patch
+BuildRequires:  ant
+BuildRequires:  java-javadoc
+BuildRequires:  java-rpmbuild >= 0:1.5
+BuildRequires:  zip
+Requires:       jpackage-utils
 %if %{with_eclipse}
-BuildRequires:	eclipse-pde >= 0:3.2.1
+BuildRequires:  eclipse-pde >= 0:3.2.1
 %endif
-BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
 The International Components for Unicode (ICU) library provides robust and
@@ -90,18 +87,18 @@ richer APIs, while remaining as compatible as possible with the original
 Java text and internationalization API design.
 
 %package javadoc
-Summary:	Javadoc for %{name}
-Group:		Development/Java
-Requires:	jpackage-utils
+Summary:        Javadoc for %{name}
+Group:          Development/Java
+Requires:       jpackage-utils
 
 %description javadoc
 Javadoc for %{name}.
 
 %if %{with_eclipse}
 %package eclipse
-Summary:	Eclipse plugin for %{name}
-Group:		Development/Java
-Requires:	jpackage-utils
+Summary:        Eclipse plugin for %{name}
+Group:          Development/Java
+Requires:       jpackage-utils
 
 %description eclipse
 Eclipse plugin support for %{name}.
@@ -111,7 +108,9 @@ Eclipse plugin support for %{name}.
 %prep
 %setup -q -c
 %patch0 -p0
-%patch4 -p0
+%patch1 -p0
+%patch2 -p0
+%patch3 -p0
 
 %{__sed} -i 's/\r//' license.html
 %{__sed} -i 's/\r//' APIChangeReport.html
@@ -132,7 +131,7 @@ sed --in-place "s:/usr/lib:%{_libdir}:g" build.xml
 %endif
 
 %install
-%__rm -rf %{buildroot} 
+%__rm -rf %{buildroot}
 
 # jars
 %__mkdir_p %{buildroot}%{_javadir}
@@ -166,10 +165,59 @@ unzip -qq -d %{buildroot}/%{eclipse_base} eclipseProjects/ICU4J.com.ibm.icu/com.
 %if %{with_eclipse}
 %files eclipse
 %defattr(0644,root,root,0755)
-%dir %{_libdir}/eclipse
-%dir %{_libdir}/eclipse/features
-%dir %{_libdir}/eclipse/plugins
-%{_libdir}/eclipse/features/*
-%{_libdir}/eclipse/plugins/*
+%dir %{_datadir}/eclipse
+%dir %{_datadir}/eclipse/features
+%dir %{_datadir}/eclipse/plugins
+%{_datadir}/eclipse/features/*
+%{_datadir}/eclipse/plugins/*
 %doc license.html readme.html
 %endif
+
+
+%changelog
+* Thu Jul 17 2008 Alexander Kurtakov <akurtakov@mandriva.org> 0:3.8.1-0.2.1mdv2009.0
++ Revision: 237782
+- new version 3.8.1
+
+  + Olivier Blin <oblin@mandriva.com>
+    - restore BuildRoot
+
+  + Thierry Vignaud <tvignaud@mandriva.com>
+    - kill re-definition of %%buildroot on Pixel's request
+
+  + Anssi Hannula <anssi@mandriva.org>
+    - buildrequire java-rpmbuild, i.e. build with icedtea on x86(_64)
+
+* Sat Nov 24 2007 David Walluck <walluck@mandriva.org> 0:3.6.1-1.6.1mdv2008.1
++ Revision: 111814
+- fix BuildRequires
+- sync with latest fc9
+
+* Sat Sep 15 2007 Anssi Hannula <anssi@mandriva.org> 0:3.6.1-1.2.2mdv2008.0
++ Revision: 87390
+- rebuild to filter out autorequires of GCJ AOT objects
+- remove unnecessary Requires(post) on java-gcj-compat
+
+* Fri Jul 27 2007 David Walluck <walluck@mandriva.org> 0:3.6.1-1.2.1mdv2008.0
++ Revision: 56202
+- 3.6.1
+
+
+* Tue Oct 31 2006 David Walluck <walluck@mandriva.org> 3.4.5-1mdv2007.0
++ Revision: 74076
+- 3.4.5
+- Import icu4j
+
+* Mon Jul 10 2006 David Walluck <walluck@mandriva.org> 0:3.4.4-2mdv2007.0
+- use JPackage spec
+- license is MIT
+
+* Sun Jul 09 2006 David Walluck <walluck@mandriva.org> 0:3.4.4-1mdv2007.0
+- release
+
+* Mon Feb 27 2006 Fernando Nasser <fnasser@redhat.com> - 0:3.2-2jpp
+- First JPP 1.7 build
+
+* Sat Jan 29 2005 David Walluck <david@jpackage.org> 0:3.2-1jpp
+- release (contributed by Mary Ellen Foster <mefoster at gmail.com>)
+
