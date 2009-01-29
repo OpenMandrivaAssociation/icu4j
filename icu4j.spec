@@ -31,7 +31,7 @@
 # If you want to build with eclipse support
 # give rpmbuild option '--with eclipse'
 
-%define _with_eclipse 1
+%define _with_eclipse 0
 
 %define with_eclipse %{?_with_eclipse:1}%{!?_with_eclipse:0}
 %define without_eclipse %{!?_with_eclipse:1}%{?_with_eclipse:0}
@@ -39,7 +39,7 @@
 %define section free
 
 %define eclipse_name            eclipse
-%define eclipse_base            %{_datadir}/%{eclipse_name}
+%define eclipse_base            %{_libdir}/%{eclipse_name}
 
 Name:           icu4j
 Version:        3.8.1
@@ -61,6 +61,8 @@ Patch2:         %{name}-updatetimestamp.patch
 # doesn't work with a 3.3 Eclipse SDK but will with a 3.4 so we'll have
 # to rebuild once we get 3.4 in.
 Patch3:         %{name}-individualsourcebundle.patch
+# PDE Build is in a location the upstream build.xml doesn't check
+Patch4:         %{name}-pdebuildlocation.patch
 BuildRequires:  ant
 BuildRequires:  java-javadoc
 BuildRequires:  java-rpmbuild >= 0:1.5
@@ -111,6 +113,7 @@ Eclipse plugin support for %{name}.
 %patch1 -p0
 %patch2 -p0
 %patch3 -p0
+%patch4 -p0
 
 %{__sed} -i 's/\r//' license.html
 %{__sed} -i 's/\r//' APIChangeReport.html
