@@ -31,19 +31,28 @@
 # If you want to build with eclipse support
 # give rpmbuild option '--with eclipse'
 
-#define _with_eclipse 0
+%define _with_eclipse 1
 
-#define with_eclipse %{?_with_eclipse:1}%{!?_with_eclipse:0}
-#define without_eclipse %{!?_with_eclipse:1}%{?_with_eclipse:0}
+%define with_eclipse %{?_with_eclipse:1}%{!?_with_eclipse:0}
+%define without_eclipse %{!?_with_eclipse:1}%{?_with_eclipse:0}
 
 %define section free
 
 %define eclipse_name            eclipse
 %define eclipse_base            %{_libdir}/%{eclipse_name}
 
+# Note:  this next section looks weird having an arch specified in a
+# noarch specfile but the parts of the build
+# All arches line up between Eclipse and Linux kernel names except i386 -> x86
+%ifarch %{ix86}
+%define eclipse_arch    x86
+%else
+%define eclipse_arch   %{_arch}
+%endif
+
 Name:           icu4j
 Version:        3.8.1
-Release:        %mkrel 0.2.1
+Release:        %mkrel 0.2.2
 Epoch:          1
 Summary:        International Components for Unicode for Java
 License:        MIT and EPL
@@ -68,9 +77,9 @@ BuildRequires:  java-javadoc
 BuildRequires:  java-rpmbuild >= 0:1.5
 BuildRequires:  zip
 Requires:       jpackage-utils
-#%if %{with_eclipse}
-#BuildRequires:  eclipse-pde >= 0:3.2.1
-#%endif
+%if %{with_eclipse}
+BuildRequires:  eclipse-pde >= 0:3.2.1
+%endif
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
@@ -96,21 +105,21 @@ Requires:       jpackage-utils
 %description javadoc
 Javadoc for %{name}.
 
-#%if %{with_eclipse}
-#%package eclipse
-#Summary:        Eclipse plugin for %{name}
-#Group:          Development/Java
-#Requires:       jpackage-utils
-#
-#%description eclipse
-#Eclipse plugin support for %{name}.
-#
-#%endif
+%if %{with_eclipse}
+%package eclipse
+Summary:        Eclipse plugin for %{name}
+Group:          Development/Java
+Requires:       jpackage-utils
+
+%description eclipse
+Eclipse plugin support for %{name}.
+
+%endif
 
 %prep
 %setup -q -c
 %patch0 -p0
-%patch1 -p0
+#%patch1 -p0
 %patch2 -p0
 %patch3 -p0
 %patch4 -p0
@@ -125,13 +134,13 @@ sed --in-place "/javac1.3/d" build.xml
 sed --in-place "s:/usr/lib:%{_libdir}:g" build.xml
 
 %build
-#if %{without_eclipse}
+%if %{without_eclipse}
 %ant -Dicu4j.javac.source=1.5 -Dicu4j.javac.target=1.5 -Dj2se.apidoc=%{_javadocdir}/java jar docs
-#else
-#%ant -Dj2se.apidoc=%{_javadocdir}/java -Declipse.home=%{eclipse_base} \
-#  -Declipse.basews=gtk -Declipse.baseos=linux \
-#  -Declipse.basearch=%{eclipse_arch} jar docs eclipsePDEBuild
-#%endif
+%else
+%ant -Dj2se.apidoc=%{_javadocdir}/java -Declipse.home=%{eclipse_base} \
+  -Declipse.basews=gtk -Declipse.baseos=linux \
+  -Declipse.basearch=%{eclipse_arch} jar docs eclipsePDEBuild
+%endif
 
 %install
 %__rm -rf %{buildroot}
@@ -146,12 +155,12 @@ sed --in-place "s:/usr/lib:%{_libdir}:g" build.xml
 %__cp -pr doc/* %{buildroot}%{_javadocdir}/%{name}-%{version}
 %__ln_s %{name}-%{version} %{buildroot}%{_javadocdir}/%{name}
 
-#%if %{with_eclipse}
+%if %{with_eclipse}
 # eclipse
-#install -d -m755 %{buildroot}/%{eclipse_base}
+install -d -m755 %{buildroot}/%{eclipse_base}
 
-#unzip -qq -d %{buildroot}/%{eclipse_base} eclipseProjects/ICU4J.com.ibm.icu/com.ibm.icu-com.ibm.icu.zip
-#%endif
+unzip -qq -d %{buildroot}/%{eclipse_base} eclipseProjects/ICU4J.com.ibm.icu/com.ibm.icu-com.ibm.icu.zip
+%endif
 
 %clean
 %__rm -rf %{buildroot}
@@ -165,13 +174,13 @@ sed --in-place "s:/usr/lib:%{_libdir}:g" build.xml
 %defattr(0644,root,root,0755)
 %doc %{_javadocdir}/*
 
-#%if %{with_eclipse}
-#%files eclipse
-#%defattr(0644,root,root,0755)
-#%dir %{_datadir}/eclipse
-#%dir %{_datadir}/eclipse/features
-#%dir %{_datadir}/eclipse/plugins
-#%{_datadir}/eclipse/features/*
-#%{_datadir}/eclipse/plugins/*
-#%doc license.html readme.html
-#%endif
+%if %{with_eclipse}
+%files eclipse
+%defattr(0644,root,root,0755)
+%dir %{_libdir}/eclipse
+%dir %{_libdir}/eclipse/features
+%dir %{_libdir}/eclipse/plugins
+%{_libdir}/eclipse/features/*
+%{_libdir}/eclipse/plugins/*
+%doc license.html readme.html
+%endif
