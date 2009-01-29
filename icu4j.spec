@@ -31,10 +31,10 @@
 # If you want to build with eclipse support
 # give rpmbuild option '--with eclipse'
 
-%define _with_eclipse 0
+#define _with_eclipse 0
 
-%define with_eclipse %{?_with_eclipse:1}%{!?_with_eclipse:0}
-%define without_eclipse %{!?_with_eclipse:1}%{?_with_eclipse:0}
+#define with_eclipse %{?_with_eclipse:1}%{!?_with_eclipse:0}
+#define without_eclipse %{!?_with_eclipse:1}%{?_with_eclipse:0}
 
 %define section free
 
@@ -68,9 +68,9 @@ BuildRequires:  java-javadoc
 BuildRequires:  java-rpmbuild >= 0:1.5
 BuildRequires:  zip
 Requires:       jpackage-utils
-%if %{with_eclipse}
-BuildRequires:  eclipse-pde >= 0:3.2.1
-%endif
+#%if %{with_eclipse}
+#BuildRequires:  eclipse-pde >= 0:3.2.1
+#%endif
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
@@ -96,16 +96,16 @@ Requires:       jpackage-utils
 %description javadoc
 Javadoc for %{name}.
 
-%if %{with_eclipse}
-%package eclipse
-Summary:        Eclipse plugin for %{name}
-Group:          Development/Java
-Requires:       jpackage-utils
-
-%description eclipse
-Eclipse plugin support for %{name}.
-
-%endif
+#%if %{with_eclipse}
+#%package eclipse
+#Summary:        Eclipse plugin for %{name}
+#Group:          Development/Java
+#Requires:       jpackage-utils
+#
+#%description eclipse
+#Eclipse plugin support for %{name}.
+#
+#%endif
 
 %prep
 %setup -q -c
@@ -125,13 +125,13 @@ sed --in-place "/javac1.3/d" build.xml
 sed --in-place "s:/usr/lib:%{_libdir}:g" build.xml
 
 %build
-%if %{without_eclipse}
+#if %{without_eclipse}
 %ant -Dicu4j.javac.source=1.5 -Dicu4j.javac.target=1.5 -Dj2se.apidoc=%{_javadocdir}/java jar docs
-%else
-%ant -Dj2se.apidoc=%{_javadocdir}/java -Declipse.home=%{eclipse_base} \
-  -Declipse.basews=gtk -Declipse.baseos=linux \
-  -Declipse.basearch=%{eclipse_arch} jar docs eclipsePDEBuild
-%endif
+#else
+#%ant -Dj2se.apidoc=%{_javadocdir}/java -Declipse.home=%{eclipse_base} \
+#  -Declipse.basews=gtk -Declipse.baseos=linux \
+#  -Declipse.basearch=%{eclipse_arch} jar docs eclipsePDEBuild
+#%endif
 
 %install
 %__rm -rf %{buildroot}
@@ -146,12 +146,12 @@ sed --in-place "s:/usr/lib:%{_libdir}:g" build.xml
 %__cp -pr doc/* %{buildroot}%{_javadocdir}/%{name}-%{version}
 %__ln_s %{name}-%{version} %{buildroot}%{_javadocdir}/%{name}
 
-%if %{with_eclipse}
+#%if %{with_eclipse}
 # eclipse
-install -d -m755 %{buildroot}/%{eclipse_base}
+#install -d -m755 %{buildroot}/%{eclipse_base}
 
-unzip -qq -d %{buildroot}/%{eclipse_base} eclipseProjects/ICU4J.com.ibm.icu/com.ibm.icu-com.ibm.icu.zip
-%endif
+#unzip -qq -d %{buildroot}/%{eclipse_base} eclipseProjects/ICU4J.com.ibm.icu/com.ibm.icu-com.ibm.icu.zip
+#%endif
 
 %clean
 %__rm -rf %{buildroot}
@@ -165,62 +165,13 @@ unzip -qq -d %{buildroot}/%{eclipse_base} eclipseProjects/ICU4J.com.ibm.icu/com.
 %defattr(0644,root,root,0755)
 %doc %{_javadocdir}/*
 
-%if %{with_eclipse}
-%files eclipse
-%defattr(0644,root,root,0755)
-%dir %{_datadir}/eclipse
-%dir %{_datadir}/eclipse/features
-%dir %{_datadir}/eclipse/plugins
-%{_datadir}/eclipse/features/*
-%{_datadir}/eclipse/plugins/*
-%doc license.html readme.html
-%endif
-
-
-%changelog
-* Thu Jul 17 2008 Alexander Kurtakov <akurtakov@mandriva.org> 0:3.8.1-0.2.1mdv2009.0
-+ Revision: 237782
-- new version 3.8.1
-
-  + Olivier Blin <oblin@mandriva.com>
-    - restore BuildRoot
-
-  + Thierry Vignaud <tvignaud@mandriva.com>
-    - kill re-definition of %%buildroot on Pixel's request
-
-  + Anssi Hannula <anssi@mandriva.org>
-    - buildrequire java-rpmbuild, i.e. build with icedtea on x86(_64)
-
-* Sat Nov 24 2007 David Walluck <walluck@mandriva.org> 0:3.6.1-1.6.1mdv2008.1
-+ Revision: 111814
-- fix BuildRequires
-- sync with latest fc9
-
-* Sat Sep 15 2007 Anssi Hannula <anssi@mandriva.org> 0:3.6.1-1.2.2mdv2008.0
-+ Revision: 87390
-- rebuild to filter out autorequires of GCJ AOT objects
-- remove unnecessary Requires(post) on java-gcj-compat
-
-* Fri Jul 27 2007 David Walluck <walluck@mandriva.org> 0:3.6.1-1.2.1mdv2008.0
-+ Revision: 56202
-- 3.6.1
-
-
-* Tue Oct 31 2006 David Walluck <walluck@mandriva.org> 3.4.5-1mdv2007.0
-+ Revision: 74076
-- 3.4.5
-- Import icu4j
-
-* Mon Jul 10 2006 David Walluck <walluck@mandriva.org> 0:3.4.4-2mdv2007.0
-- use JPackage spec
-- license is MIT
-
-* Sun Jul 09 2006 David Walluck <walluck@mandriva.org> 0:3.4.4-1mdv2007.0
-- release
-
-* Mon Feb 27 2006 Fernando Nasser <fnasser@redhat.com> - 0:3.2-2jpp
-- First JPP 1.7 build
-
-* Sat Jan 29 2005 David Walluck <david@jpackage.org> 0:3.2-1jpp
-- release (contributed by Mary Ellen Foster <mefoster at gmail.com>)
-
+#%if %{with_eclipse}
+#%files eclipse
+#%defattr(0644,root,root,0755)
+#%dir %{_datadir}/eclipse
+#%dir %{_datadir}/eclipse/features
+#%dir %{_datadir}/eclipse/plugins
+#%{_datadir}/eclipse/features/*
+#%{_datadir}/eclipse/plugins/*
+#%doc license.html readme.html
+#%endif
