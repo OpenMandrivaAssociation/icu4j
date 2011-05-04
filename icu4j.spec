@@ -52,7 +52,7 @@
 
 Name:           icu4j
 Version:        3.8.1
-Release:        %mkrel 0.2.5
+Release:        %mkrel 0.2.6
 Epoch:          1
 Summary:        International Components for Unicode for Java
 License:        MIT and EPL
