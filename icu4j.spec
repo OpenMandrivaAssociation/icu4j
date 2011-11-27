@@ -44,7 +44,7 @@
 
 Name:           icu4j
 Version:        4.4.2
-Release:        2
+Release:        4
 Epoch:          1
 Summary:        International Components for Unicode for Java
 License:        MIT and EPL 
