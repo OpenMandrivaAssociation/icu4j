@@ -33,7 +33,7 @@
 %global section free
 
 %global eclipse_base            %{_libdir}/eclipse
-# Note:  this next section looks weird having an arch specified in a
+# Note:	this next section looks weird having an arch specified in a
 # noarch specfile but the parts of the build
 # All arches line up between Eclipse and Linux kernel names except i386 -> x86
 %ifarch %{ix86}
@@ -42,37 +42,36 @@
 %global eclipse_arch   %{_arch}
 %endif
 
-Name:           icu4j
-Version:        4.4.2
-Release:        4
-Epoch:          1
-Summary:        International Components for Unicode for Java
-License:        MIT and EPL 
-URL:            http://site.icu-project.org/
-Group:          Development/Java
+Summary:	International Components for Unicode for Java
+Name:		icu4j
+Epoch:		1
+Version:	4.4.2
+Release:	4
+License:	MIT and EPL 
+Group:		Development/Java
+Url:		http://site.icu-project.org/
 #http://source.icu-project.org/repos/icu/icu4j/tags/release-4-4-2-eclipse37-20110208/ icu4j-4.4.2
 #tar caf icu4j-4.4.2.tar.xz icu4j-4.4.2/
-Source0:        icu4j-4.4.2.tar.xz
-Source1:        %{name}-4.4.2.pom
+Source0:	icu4j-4.4.2.tar.xz
+Source1:	%{name}-4.4.2.pom
+Patch0:	%{name}-crosslink.patch
 
-Patch0:         %{name}-crosslink.patch
-BuildRequires:  ant >= 1.7.0
-# FIXME:  is this necessary or is it just adding strings in the hrefs in
+BuildRequires:	ant >= 1.7.0
+# FIXME:	is this necessary or is it just adding strings in the hrefs in
 # the docs?
-BuildRequires:  java-javadoc >= 0:1.6.0
+BuildRequires:	java-javadoc >= 0:1.6.0
 # This is to ensure we get OpenJDK and not GCJ
-BuildRequires:  java-devel >= 0:1.6.0
-BuildRequires:  jpackage-utils >= 0:1.5
-Requires:       jpackage-utils
-Requires(post): jpackage-utils
-Requires(postun): jpackage-utils
+BuildRequires:	java-devel >= 0:1.6.0
+BuildRequires:	jpackage-utils >= 0:1.5
+Requires:	jpackage-utils
+Requires(post,postun):	jpackage-utils
 # This is to ensure we get OpenJDK and not GCJ
-Requires:       java >= 0:1.6.0
+Requires:	java >= 0:1.6.0
 %if %{with_eclipse}
-BuildRequires:  eclipse-pde >= 0:3.2.1
+BuildRequires:	eclipse-pde >= 0:3.2.1
 %global         debug_package %{nil}
 %else
-BuildArch:      noarch
+BuildArch:	noarch
 %endif
 
 %description
@@ -91,19 +90,19 @@ richer APIs, while remaining as compatible as possible with the original
 Java text and internationalization API design.
 
 %package javadoc
-Summary:        Javadoc for %{name}
-Group:          Development/Java
-Requires:       jpackage-utils
-Requires:       java-javadoc >= 0:1.6.0
+Summary:	Javadoc for %{name}
+Group:		Development/Java
+Requires:	jpackage-utils
+Requires:	java-javadoc >= 0:1.6.0
 
 %description javadoc
 Javadoc for %{name}.
 
 %if %{with_eclipse}
 %package eclipse
-Summary:        Eclipse plugin for %{name}
-Group:          Development/Java
-Requires:       jpackage-utils
+Summary:	Eclipse plugin for %{name}
+Group:		Development/Java
+Requires:	jpackage-utils
 
 %description eclipse
 Eclipse plugin support for %{name}.
@@ -137,13 +136,13 @@ popd
   
 %install
 # jars
-%__mkdir_p %{buildroot}%{_javadir}
-%__cp -ap %{name}.jar %{buildroot}%{_javadir}/%{name}.jar
+mkdir -p %{buildroot}%{_javadir}
+cp  -ap %{name}.jar %{buildroot}%{_javadir}/%{name}.jar
 
 # javadoc
-%__mkdir_p %{buildroot}%{_javadocdir}/%{name}-%{version}
-%__cp -pr doc/* %{buildroot}%{_javadocdir}/%{name}-%{version}
-%__ln_s %{name}-%{version} %{buildroot}%{_javadocdir}/%{name}
+mkdir -p %{buildroot}%{_javadocdir}/%{name}-%{version}
+cp  -pr doc/* %{buildroot}%{_javadocdir}/%{name}-%{version}
+ln -s %{name}-%{version} %{buildroot}%{_javadocdir}/%{name}
 
 %if %{with_eclipse}
 # eclipse
@@ -164,19 +163,16 @@ cp %{name}-4.4.2.pom $RPM_BUILD_ROOT%{_mavenpomdir}/JPP-%{name}.pom
 %update_maven_depmap
 
 %files
-%defattr(-,root,root,-)
 %doc readme.html APIChangeReport.html
 %{_javadir}/%{name}*.jar
 %{_mavendepmapfragdir}/*
 %{_mavenpomdir}/*.pom
 
 %files javadoc
-%defattr(-,root,root,-)
 %doc %{_javadocdir}/*
 
 %if %{with_eclipse}
 %files eclipse
-%defattr(-,root,root,-)
 %dir %{_libdir}/eclipse
 %dir %{_libdir}/eclipse/features
 %dir %{_libdir}/eclipse/plugins
