@@ -46,7 +46,7 @@ Summary:	International Components for Unicode for Java
 Name:		icu4j
 Epoch:		1
 Version:	4.4.2
-Release:	6
+Release:	7
 License:	MIT and EPL 
 Group:		Development/Java
 Url:		http://site.icu-project.org/
