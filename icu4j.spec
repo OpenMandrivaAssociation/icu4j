@@ -124,6 +124,7 @@ sed --in-place "/javac1.3/d" build.xml
 sed --in-place "s:/usr/lib:%{_libdir}:g" build.xml
 
 %build
+ls /usr/lib/jvm/java-rpmbuild
 %ant -Dicu4j.javac.source=1.5 -Dicu4j.javac.target=1.5 -Dj2se.apidoc=%{_javadocdir}/java jar docs
 %if %{with_eclipse}
 pushd eclipse-build
