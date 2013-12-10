@@ -60,8 +60,8 @@ BuildRequires:	ant >= 1.7.0
 # FIXME:	is this necessary or is it just adding strings in the hrefs in
 # the docs?
 BuildRequires:	java-javadoc >= 0:1.6.0
-# This is to ensure we get OpenJDK and not GCJ
 BuildRequires:	java-devel >= 0:1.6.0
+BuildRequires:	javapackages-tools
 BuildRequires:	jpackage-utils >= 0:1.5
 Requires:	jpackage-utils
 Requires(post,postun):	jpackage-utils
