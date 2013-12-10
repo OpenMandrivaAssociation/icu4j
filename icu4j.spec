@@ -61,6 +61,7 @@ BuildRequires:	ant >= 1.7.0
 # the docs?
 BuildRequires:	java-javadoc >= 0:1.6.0
 BuildRequires:	java-devel >= 0:1.6.0
+BuildRequires:	java-rpmbuild
 BuildRequires:	javapackages-tools
 BuildRequires:	jpackage-utils >= 0:1.5
 Requires:	jpackage-utils
@@ -124,7 +125,6 @@ sed --in-place "/javac1.3/d" build.xml
 sed --in-place "s:/usr/lib:%{_libdir}:g" build.xml
 
 %build
-ls /usr/lib/jvm/java-rpmbuild
 %ant -Dicu4j.javac.source=1.5 -Dicu4j.javac.target=1.5 -Dj2se.apidoc=%{_javadocdir}/java jar docs
 %if %{with_eclipse}
 pushd eclipse-build
