@@ -1,5 +1,2 @@
 sources:
   icu4j-50.1.1.tar.xz: 652f0e14ca0b5851ca1b35046874b97c578c9055
-  icu4j-50.1.1-2.0-omv2014.0.noarch.rpm: d65b59c6c125aef68d27e030022c635f2064a17e
-  icu4j-charset-50.1.1-2.0-omv2014.0.noarch.rpm: 0dad651c707abd7ac873b54f771b3a4be2096be6
-  icu4j-javadoc-50.1.1-2.0-omv2014.0.noarch.rpm: d5587cbb18c274902dc37290a4fb746216b1c817
