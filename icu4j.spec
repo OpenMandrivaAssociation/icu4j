@@ -1,4 +1,9 @@
 %{?_javapackages_macros:%_javapackages_macros}
+%if 0%{?fedora}
+%else
+%undefine __cp
+%define __cp /bin/cp
+%endif
 # Copyright (c) 2000-2007, JPackage Project
 # All rights reserved.
 #
@@ -34,7 +39,11 @@
 %{!?scl:%global _scl_root %{nil}}
 
 
+%if 0%{?fedora}
 %global with_eclipse 1
+%else
+%global with_eclipse 0
+%endif
 
 %if 0%{?rhel}
 %global with_eclipse 0
@@ -150,6 +159,10 @@ ECLIPSE_BASE=%{eclipse_base}
 pushd eclipse-build
   %ant -Dj2se.apidoc=%{_javadocdir}/java -Declipse.home=${ECLIPSE_BASE} \
     -Declipse.basews=gtk -Declipse.baseos=linux \
+%if 0%{?fedora}
+%else
+    -Declipse.pdebuild.scripts= \
+%endif
     -Declipse.pde.dir=${ECLIPSE_BASE}/dropins/sdk/plugins/`ls ${ECLIPSE_BASE}/dropins/sdk/plugins/|grep org.eclipse.pde.build_`
 popd
 %endif
