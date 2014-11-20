@@ -31,7 +31,7 @@ Patch1:         improve-osgi-manifest.patch
 BuildRequires:  ant >= 1.7.0
 BuildRequires:  java-devel >= 1:1.7.0
 BuildRequires:  java-javadoc
-BuildRequires:  javapackages-tools
+BuildRequires:  maven-local
 BuildRequires:  zip
 %if %{with_eclipse}
 BuildRequires:  %{?scl_prefix}eclipse-pde >= 0:3.2.1
