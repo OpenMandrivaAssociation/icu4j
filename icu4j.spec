@@ -1,43 +1,6 @@
 %{?_javapackages_macros:%_javapackages_macros}
-%if 0%{?fedora}
-%else
-%undefine __cp
-%define __cp /bin/cp
-%endif
-# Copyright (c) 2000-2007, JPackage Project
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the
-#    distribution.
-# 3. Neither the name of the JPackage Project nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-
 %{?scl:%scl_package icu4j}
 %{!?scl:%global pkg_name %{name}}
-%{!?scl:%global _scl_root %{nil}}
-
 
 %global with_eclipse 1
 
@@ -45,51 +8,39 @@
 %global with_eclipse 0
 %endif
 
-%global eclipse_base            `more %{_bindir}/eclipse-pdebuild  | grep datadir= | sed -e "s/datadir=//"`/eclipse
-# Note:  this next section looks weird having an arch specified in a
-# noarch specfile but the parts of the build
-# All arches line up between Eclipse and Linux kernel names except i386 -> x86
-%ifarch %{ix86}
-%global eclipse_arch    x86
-%else
-%global eclipse_arch   %{_arch}
-%endif
-
 Name:           %{?scl_prefix}icu4j
-Version:        50.1.1
-Release:        2.3%{?dist}
+Version:        54.1.1
+Release:        2%{?dist}
 Epoch:          1
 Summary:        International Components for Unicode for Java
-License:        MIT and EPL 
+License:        MIT and EPL
 URL:            http://site.icu-project.org/
 
 #CAUTION
 #to create a tarball use following procedure
-#svn co http://source.icu-project.org/repos/icu/icu4j/tags/release-50-1-1-eclipse-20130412 icu4j-<version>
+#svn co http://source.icu-project.org/repos/icu/icu4j/tags/release-54-1-1 icu4j-<version>
 #tar caf icu4j-<version>.tar.xz icu4j-<version>/
 Source0:        icu4j-%{version}.tar.xz
-Source1:        %{pkg_name}-%{version}.pom
 
-Patch0:         %{pkg_name}-crosslink.patch
+# Java 8 taglet API changes
+Patch0:         java8-taglets.patch
+
+# Add better OSGi metadata to core jar
+Patch1:         improve-osgi-manifest.patch
+
 BuildRequires:  ant >= 1.7.0
-# FIXME:  is this necessary or is it just adding strings in the hrefs in
-# the docs?
-BuildRequires:  java-javadoc >= 1:1.6.0
-# This is to ensure we get OpenJDK and not GCJ
 BuildRequires:  java-devel >= 1:1.7.0
-BuildRequires:  jpackage-utils >= 0:1.5
+BuildRequires:  java-javadoc
+BuildRequires:  javapackages-tools
 BuildRequires:  zip
-Requires:       jpackage-utils
-%{?scl:Requires: %scl_runtime}
-# This is to ensure we get OpenJDK and not GCJ
-Requires:       java >= 1:1.6.0
 %if %{with_eclipse}
 BuildRequires:  %{?scl_prefix}eclipse-pde >= 0:3.2.1
-%global         debug_package %{nil}
 %endif
 
-BuildArch:      noarch
+Requires:       java-headless >= 1:1.7.0
+%{?scl:Requires: %scl_runtime}
 
+BuildArch:      noarch
 
 %description
 The International Components for Unicode (ICU) library provides robust and
@@ -107,104 +58,114 @@ richer APIs, while remaining as compatible as possible with the original
 Java text and internationalization API design.
 
 %package charset
-Summary:        Charset sublibrary of %{pkg_name}
-
-Requires:       jpackage-utils
+Summary:        Charset converter library of %{pkg_name}
 
 %description charset
-Charset sublibrary of %{pkg_name}.
+Charset converter library of %{pkg_name}.
+
+%package localespi
+Summary:        Locale SPI library of %{pkg_name}
+
+%description localespi
+Locale SPI library of %{pkg_name}.
 
 %package javadoc
 Summary:        Javadoc for %{pkg_name}
-
-Requires:       jpackage-utils
-Requires:       java-javadoc >= 1:1.6.0
+Requires:       java-javadoc
 
 %description javadoc
-Javadoc for %{pkg_name}.
+API documentation for %{pkg_name}.
 
 %if %{with_eclipse}
 %package eclipse
 Summary:        Eclipse plugin for %{pkg_name}
 
-Requires:       jpackage-utils
-
 %description eclipse
 Eclipse plugin support for %{pkg_name}.
-
 %endif
 
 %prep
-%setup -q -n %{pkg_name}-%{version}
-#%patch0 -p0
+%setup -q -n icu4j-%{version}
 
-cp %{SOURCE1} .
-
-%{__sed} -i 's/\r//' APIChangeReport.html
-%{__sed} -i 's/\r//' readme.html
-
-sed --in-place "s/ .*bootclasspath=.*//g" build.xml
-sed --in-place "s/<date datetime=.*when=\"after\"\/>//" build.xml
-sed --in-place "/javac1.3/d" build.xml
-sed --in-place "s:/usr/lib:%{_datadir}:g" build.xml
+%patch0
+%patch1
 
 %build
-%ant -Dicu4j.javac.source=1.5 -Dicu4j.javac.target=1.5 -Dj2se.apidoc=%{_javadocdir}/java jar docs
+export JAVA_HOME=%{_jvmdir}/java/
+ant -Dicu4j.api.doc.jdk.link=%{_javadocdir}/java all check
+
 %if %{with_eclipse}
-ECLIPSE_BASE=%{eclipse_base}
+ECLIPSE_BASE=`grep datadir= %{_bindir}/eclipse-pdebuild | sed -e "s/datadir=//"`/eclipse
 pushd eclipse-build
-  %ant -Dj2se.apidoc=%{_javadocdir}/java -Declipse.home=${ECLIPSE_BASE} \
+  ant -Declipse.home=$ECLIPSE_BASE \
+    -Djava.rt=%{_jvmdir}/jre/lib/rt.jar \
     -Declipse.basews=gtk -Declipse.baseos=linux \
-    -Declipse.pde.dir=${ECLIPSE_BASE}/dropins/sdk/plugins/`ls ${ECLIPSE_BASE}/dropins/sdk/plugins/|grep org.eclipse.pde.build_`
+    -Declipse.pde.dir=$ECLIPSE_BASE/dropins/sdk/plugins/$(ls $ECLIPSE_BASE/dropins/sdk/plugins/|grep org.eclipse.pde.build_)
 popd
 %endif
-  
+
+%mvn_artifact pom.xml icu4j.jar
+
 %install
+%mvn_install -J doc
 
-# jars
-%__mkdir_p %{buildroot}%{_javadir}
-%__cp -ap %{pkg_name}.jar %{buildroot}%{_javadir}/%{pkg_name}.jar
-%__cp -ap %{pkg_name}-charset.jar %{buildroot}%{_javadir}/%{pkg_name}-charset.jar
-
-# javadoc
-%__mkdir_p %{buildroot}%{_javadocdir}/%{pkg_name}
-%__cp -pr doc/* %{buildroot}%{_javadocdir}/%{pkg_name}
+# No poms for these, so install manually
+install -m 644 icu4j-charset.jar   %{buildroot}%{_javadir}/icu4j/
+install -m 644 icu4j-localespi.jar %{buildroot}%{_javadir}/icu4j/
 
 %if %{with_eclipse}
-# eclipse
 install -d -m755 %{buildroot}%{_javadir}/icu4j-eclipse
-
 unzip -qq -d %{buildroot}%{_javadir}/icu4j-eclipse eclipse-build/out/projects/ICU4J.com.ibm.icu/com.ibm.icu-com.ibm.icu.zip
 %endif
 
-# maven stuff
-install -d -m 755 $RPM_BUILD_ROOT%{_mavenpomdir}
-cp %{pkg_name}-%{version}.pom $RPM_BUILD_ROOT%{_mavenpomdir}/JPP-%{pkg_name}.pom
-%add_maven_depmap JPP-%{pkg_name}.pom %{pkg_name}.jar
-
-%files
-%doc readme.html APIChangeReport.html
-%{_javadir}/%{pkg_name}.jar
-%{_mavendepmapfragdir}/*
-%{_mavenpomdir}/*.pom
+%files -f .mfiles
+%doc main/shared/licenses/license.html readme.html APIChangeReport.html
+%dir %{_javadir}/icu4j
 
 %files charset
-%{_javadir}/%{pkg_name}-charset.jar
+%doc main/shared/licenses/license.html
+%{_javadir}/icu4j/icu4j-charset.jar
 
-%files javadoc
-%doc %{_javadocdir}/*
+%files localespi
+%doc main/shared/licenses/license.html
+%{_javadir}/icu4j/icu4j-localespi.jar
+
+%files javadoc -f .mfiles-javadoc
+%doc main/shared/licenses/license.html
 
 %if %{with_eclipse}
 %files eclipse
+%doc main/shared/licenses/license.html
 %dir %{_javadir}/icu4j-eclipse/
 %dir %{_javadir}/icu4j-eclipse/features
 %dir %{_javadir}/icu4j-eclipse/plugins
 %{_javadir}/icu4j-eclipse/features/*
 %{_javadir}/icu4j-eclipse/plugins/*
-%doc readme.html
 %endif
 
 %changelog
+* Mon Nov 17 2014 Mat Booth <mat.booth@redhat.com> - 1:54.1.1-2
+- Fix typo in osgi manifest patch
+
+* Mon Nov 17 2014 Mat Booth <mat.booth@redhat.com> - 1:54.1.1-1
+- Update to latest upstream release
+- Add patch for building against java 8 taglet API
+  - Fixes: rhbz#1087450, rhbz#1106794
+- Add patch for generating better OSGi metadata in core lib
+- Install core lib with mvn_install
+- Package localespi lib
+- Run test suite
+
+* Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1:52.1-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
+
+* Fri Mar 28 2014 Michael Simacek <msimacek@redhat.com> - 1:52.1-2
+- Use Requires: java-headless rebuild (#1067528)
+
+* Tue Mar 18 2014 Michael Simacek <msimacek@redhat.com> - 1:52.1-1
+- Update to upstream version 52.1
+- Require java-headless
+
 * Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1:50.1.1-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
 
@@ -382,5 +343,6 @@ cp %{pkg_name}-%{version}.pom $RPM_BUILD_ROOT%{_mavenpomdir}/JPP-%{pkg_name}.pom
 * Mon Feb 27 2006 Fernando Nasser <fnasser@redhat.com> - 0:3.2-2jpp
 - First JPP 1.7 build
 
-* Sun Jan 29 2005 David Walluck <david@jpackage.org> 0:3.2-1jpp
+* Sat Jan 29 2005 David Walluck <david@jpackage.org> 0:3.2-1jpp
 - release (contributed by Mary Ellen Foster <mefoster at gmail.com>)
+

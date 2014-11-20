@@ -1,2 +1,4 @@
-sources:
+removed_sources:
   icu4j-50.1.1.tar.xz: 652f0e14ca0b5851ca1b35046874b97c578c9055
+sources:
+  icu4j-54.1.1.tar.xz: 095755164b51a293d9bb090e9b0d1877bc1818c8
