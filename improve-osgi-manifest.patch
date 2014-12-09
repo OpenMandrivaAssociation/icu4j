@@ -38,7 +38,17 @@
              <filterset>
                  <filter token="SPECVERSION" value="${jar.spec.version}"/>
                  <filter token="IMPLVERSION" value="${jar.impl.version}"/>
-+                <filter token="DATAVERSION" value="${jar.data.version}"/>
++                <filter token="DATAVERSION" value="${icu4j.data.version}"/>
+                 <filter token="COPYRIGHT" value="${jar.copyright.info}"/>
+                 <filter token="EXECENV" value="${jar.exec.env}"/>
+             </filterset>
+--- build.xml.orig	2014-11-17 21:45:53.308610711 +0000
++++ build.xml	2014-11-17 21:46:29.969096734 +0000
+@@ -371,6 +371,7 @@
+             <filterset>
+                 <filter token="SPECVERSION" value="${jar.spec.version}"/>
+                 <filter token="IMPLVERSION" value="${jar.impl.version}"/>
++                <filter token="DATAVERSION" value="${icu4j.data.version}"/>
                  <filter token="COPYRIGHT" value="${jar.copyright.info}"/>
                  <filter token="EXECENV" value="${jar.exec.env}"/>
              </filterset>

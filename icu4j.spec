@@ -2,15 +2,9 @@
 %{?scl:%scl_package icu4j}
 %{!?scl:%global pkg_name %{name}}
 
-%global with_eclipse 1
-
-%if 0%{?rhel}
-%global with_eclipse 0
-%endif
-
 Name:           %{?scl_prefix}icu4j
 Version:        54.1.1
-Release:        2%{?dist}
+Release:        4%{?dist}
 Epoch:          1
 Summary:        International Components for Unicode for Java
 License:        MIT and EPL
@@ -33,12 +27,14 @@ BuildRequires:  java-devel >= 1:1.7.0
 BuildRequires:  java-javadoc
 BuildRequires:  maven-local
 BuildRequires:  zip
-%if %{with_eclipse}
-BuildRequires:  %{?scl_prefix}eclipse-pde >= 0:3.2.1
-%endif
 
 Requires:       java-headless >= 1:1.7.0
 %{?scl:Requires: %scl_runtime}
+
+# Obsoletes/provides added in F22
+Obsoletes: %{name}-eclipse < %{epoch}:%{version}-%{release}
+Provides: %{name}-eclipse = %{epoch}:%{version}-%{release}
+
 
 BuildArch:      noarch
 
@@ -59,12 +55,14 @@ Java text and internationalization API design.
 
 %package charset
 Summary:        Charset converter library of %{pkg_name}
+Requires:	%{name} = %{epoch}:%{version}-%{release}
 
 %description charset
 Charset converter library of %{pkg_name}.
 
 %package localespi
 Summary:        Locale SPI library of %{pkg_name}
+Requires:	%{name} = %{epoch}:%{version}-%{release}
 
 %description localespi
 Locale SPI library of %{pkg_name}.
@@ -76,14 +74,6 @@ Requires:       java-javadoc
 %description javadoc
 API documentation for %{pkg_name}.
 
-%if %{with_eclipse}
-%package eclipse
-Summary:        Eclipse plugin for %{pkg_name}
-
-%description eclipse
-Eclipse plugin support for %{pkg_name}.
-%endif
-
 %prep
 %setup -q -n icu4j-%{version}
 
@@ -94,16 +84,6 @@ Eclipse plugin support for %{pkg_name}.
 export JAVA_HOME=%{_jvmdir}/java/
 ant -Dicu4j.api.doc.jdk.link=%{_javadocdir}/java all check
 
-%if %{with_eclipse}
-ECLIPSE_BASE=`grep datadir= %{_bindir}/eclipse-pdebuild | sed -e "s/datadir=//"`/eclipse
-pushd eclipse-build
-  ant -Declipse.home=$ECLIPSE_BASE \
-    -Djava.rt=%{_jvmdir}/jre/lib/rt.jar \
-    -Declipse.basews=gtk -Declipse.baseos=linux \
-    -Declipse.pde.dir=$ECLIPSE_BASE/dropins/sdk/plugins/$(ls $ECLIPSE_BASE/dropins/sdk/plugins/|grep org.eclipse.pde.build_)
-popd
-%endif
-
 %mvn_artifact pom.xml icu4j.jar
 
 %install
@@ -112,11 +92,6 @@ popd
 # No poms for these, so install manually
 install -m 644 icu4j-charset.jar   %{buildroot}%{_javadir}/icu4j/
 install -m 644 icu4j-localespi.jar %{buildroot}%{_javadir}/icu4j/
-
-%if %{with_eclipse}
-install -d -m755 %{buildroot}%{_javadir}/icu4j-eclipse
-unzip -qq -d %{buildroot}%{_javadir}/icu4j-eclipse eclipse-build/out/projects/ICU4J.com.ibm.icu/com.ibm.icu-com.ibm.icu.zip
-%endif
 
 %files -f .mfiles
 %doc main/shared/licenses/license.html readme.html APIChangeReport.html
@@ -132,16 +107,6 @@ unzip -qq -d %{buildroot}%{_javadir}/icu4j-eclipse eclipse-build/out/projects/IC
 
 %files javadoc -f .mfiles-javadoc
 %doc main/shared/licenses/license.html
-
-%if %{with_eclipse}
-%files eclipse
-%doc main/shared/licenses/license.html
-%dir %{_javadir}/icu4j-eclipse/
-%dir %{_javadir}/icu4j-eclipse/features
-%dir %{_javadir}/icu4j-eclipse/plugins
-%{_javadir}/icu4j-eclipse/features/*
-%{_javadir}/icu4j-eclipse/plugins/*
-%endif
 
 %changelog
 * Mon Nov 17 2014 Mat Booth <mat.booth@redhat.com> - 1:54.1.1-2
