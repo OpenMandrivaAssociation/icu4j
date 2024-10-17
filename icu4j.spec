@@ -8,7 +8,7 @@ Release:        4%{?dist}
 Epoch:          1
 Summary:        International Components for Unicode for Java
 License:        MIT and EPL
-URL:            http://site.icu-project.org/
+URL:            https://site.icu-project.org/
 
 #CAUTION
 #to create a tarball use following procedure
